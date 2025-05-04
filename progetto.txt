@@ -1,0 +1,65 @@
+# Discord Locale - Simulazione di Canali e Messaggi tra Processi
+
+## Introduzione
+
+Questo progetto simula un sistema di messaggistica simile a Discord, dove diversi utenti possono inviare e ricevere messaggi in canali separati. Ogni processo rappresenta un utente, che si connette a un canale specifico e comunica attraverso un server centrale. La comunicazione avviene tramite named pipes (FIFO).
+
+## Come funziona
+
+1. **Server:** Il server gestisce la comunicazione tra i client, ricevendo e inoltrando i messaggi agli utenti nel canale specificato.
+2. **Client:** Ogni client si collega a un canale specifico e invia i messaggi che saranno distribuiti agli altri utenti nel canale.
+
+## Compilazione
+
+Esegui il comando `make` per compilare il server e il client.
+
+## Esecuzione
+
+1. Avvia il server con il comando:
+
+   ```bash
+   ./server
+
+### 5. **Spiegazione del Codice**
+
+- **server.c:**
+  - Il server crea una FIFO chiamata `server_fifo` per ricevere le connessioni dai client.
+  - Quando un client si connette, il server crea una FIFO per il canale specificato (ad esempio `canale1.pipe`).
+  - Ogni client invia i suoi messaggi alla FIFO del canale, e il server li distribuisce a tutti i client connessi a quel canale.
+
+- **client.c:**
+  - Ogni client si connette a un canale specifico, inviando il nome del canale e i messaggi tramite la FIFO del server.
+  - I messaggi vengono scritti nella FIFO del server, che li inoltra a tutti gli altri client connessi al canale.
+
+### 6. **Come Compilare ed Eseguire**
+
+1. **Compila il progetto:**
+   - Apri il terminale e vai nella cartella del progetto.
+   - Esegui `make` per compilare il server e il client.
+
+2. **Esegui il server:**
+   - Esegui il server con il comando:
+     ```bash
+     ./server
+     ```
+
+3. **Esegui i client:**
+   - Esegui uno o più client con il comando:
+     ```bash
+     ./client
+     ```
+
+   - I client ti chiederanno di inserire il nome di un canale e il messaggio da inviare.
+
+### 7. **Modifiche future**
+Questo progetto può essere esteso aggiungendo:
+- **Gestione di più canali e utenti.**
+- **Autenticazione** degli utenti.
+- **Persistenza** dei messaggi su disco.
+- **Gestione dei processi** (ad esempio, con `fork()` per più client).
+
+---
+
+### Conclusione
+Il progetto ora simula un sistema di messaggistica simile a Discord utilizzando pipes (FIFO) in C. Ogni client può inviare e ricevere messaggi in tempo reale in un canale specifico.
+
