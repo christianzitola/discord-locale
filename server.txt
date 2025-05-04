@@ -1,0 +1,68 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
+#define MAX_MESSAGE_LENGTH 256
+#define MAX_CHANNELS 10
+
+// Funzione per gestire la comunicazione
+void handle_client(int client_fd, const char* channel_name) {
+    char message[MAX_MESSAGE_LENGTH];
+    int channel_fd;
+
+    // Apro la pipe del canale specifico
+    char pipe_name[100];
+    snprintf(pipe_name, sizeof(pipe_name), "%s.pipe", channel_name);
+    channel_fd = open(pipe_name, O_WRONLY);
+    if (channel_fd < 0) {
+        perror("Errore nell'aprire il canale");
+        exit(EXIT_FAILURE);
+    }
+
+    while (1) {
+        memset(message, 0, sizeof(message));
+        // Leggo il messaggio dal client
+        if (read(client_fd, message, sizeof(message)) > 0) {
+            if (strlen(message) > 0) {
+                printf("Messaggio ricevuto: %s\n", message);
+                // Invia il messaggio a tutti gli utenti nel canale
+                write(channel_fd, message, strlen(message) + 1);
+            }
+        }
+    }
+}
+
+int main() {
+    char channel_name[50];
+    int server_fd;
+    char fifo_name[] = "server_fifo";
+
+    // Creo la FIFO per il server
+    mkfifo(fifo_name, 0666);
+
+    while (1) {
+        // Aspetto connessioni da parte dei client
+        printf("In attesa di connessioni...\n");
+        server_fd = open(fifo_name, O_RDONLY);
+
+        // Leggo il nome del canale dal client
+        read(server_fd, channel_name, sizeof(channel_name));
+        printf("Connessione con il canale: %s\n", channel_name);
+
+        // Creo una FIFO per il canale se non esiste già
+        char pipe_name[100];
+        snprintf(pipe_name, sizeof(pipe_name), "%s.pipe", channel_name);
+        mkfifo(pipe_name, 0666);
+
+        // Gestisco il client
+        handle_client(server_fd, channel_name);
+
+        close(server_fd);
+    }
+
+    return 0;
+}

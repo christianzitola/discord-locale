@@ -1,0 +1,54 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
+#define MAX_MESSAGE_LENGTH 256
+
+void send_message(const char* channel_name, const char* message) {
+    int server_fd;
+    char fifo_name[] = "server_fifo";
+
+    // Apro la FIFO del server
+    server_fd = open(fifo_name, O_WRONLY);
+    if (server_fd < 0) {
+        perror("Errore nell'aprire la FIFO del server");
+        exit(EXIT_FAILURE);
+    }
+
+    // Invia il nome del canale e il messaggio
+    write(server_fd, channel_name, strlen(channel_name) + 1);
+    write(server_fd, message, strlen(message) + 1);
+
+    close(server_fd);
+}
+
+int main() {
+    char message[MAX_MESSAGE_LENGTH];
+    char channel_name[50];
+
+    // Chiedo all'utente di specificare il canale
+    printf("Inserisci il nome del canale: ");
+    scanf("%s", channel_name);
+
+    while (1) {
+        printf("Inserisci il messaggio (o 'exit' per uscire): ");
+        getchar();  // Consuma il newline residuo
+        fgets(message, MAX_MESSAGE_LENGTH, stdin);
+
+        // Rimuovo il newline finale
+        message[strcspn(message, "\n")] = '\0';
+
+        if (strcmp(message, "exit") == 0) {
+            break;
+        }
+
+        // Invio il messaggio al server
+        send_message(channel_name, message);
+    }
+
+    return 0;
+}
